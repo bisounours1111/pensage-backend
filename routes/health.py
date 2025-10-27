@@ -1,36 +1,39 @@
-from flask import Blueprint, jsonify
+from fastapi import APIRouter, HTTPException
 from utils.supabase_client import SupabaseClient
 
-health_bp = Blueprint('health', __name__)
+health_router = APIRouter()
 
-@health_bp.route('/health', methods=['GET'])
-def health_check():
+@health_router.get('/health')
+async def health_check():
     """Endpoint pour vérifier l'état de santé de l'API"""
     try:
         # Tester la connexion Supabase
         client = SupabaseClient.get_client()
         
-        return jsonify({
+        return {
             'status': 'healthy',
             'message': 'API fonctionne correctement',
             'supabase': 'connected'
-        }), 200
+        }
     except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'message': str(e),
-            'supabase': 'disconnected'
-        }), 500
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'status': 'unhealthy',
+                'message': str(e),
+                'supabase': 'disconnected'
+            }
+        )
 
-@health_bp.route('/', methods=['GET'])
-def root():
+@health_router.get('/')
+async def root():
     """Endpoint racine"""
-    return jsonify({
+    return {
         'message': 'Bienvenue sur l\'API PENSAGA',
         'version': '1.0.0',
         'endpoints': {
             'health': '/health',
             'api': '/api'
         }
-    }), 200
+    }
 

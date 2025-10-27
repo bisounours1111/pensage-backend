@@ -1,88 +1,75 @@
-from flask import Blueprint, jsonify, request
+from fastapi import APIRouter, HTTPException, Body, status
+from typing import Dict, Any
 from utils.supabase_client import supabase
 
-api_bp = Blueprint('api', __name__)
+api_router = APIRouter()
 
-@api_bp.route('/example', methods=['GET'])
-def get_example():
+@api_router.get('/example')
+async def get_example():
     """Exemple d'endpoint GET"""
     try:
         # Exemple de requête Supabase
         # response = supabase.table('your_table').select("*").execute()
         
-        return jsonify({
+        return {
             'message': 'Endpoint exemple GET',
             'data': []
-        }), 200
+        }
     except Exception as e:
-        return jsonify({
-            'error': str(e)
-        }), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_bp.route('/example', methods=['POST'])
-def create_example():
+@api_router.post('/example', status_code=status.HTTP_201_CREATED)
+async def create_example(data: Dict[str, Any] = Body(...)):
     """Exemple d'endpoint POST"""
     try:
-        data = request.get_json()
-        
         # Exemple d'insertion dans Supabase
         # response = supabase.table('your_table').insert(data).execute()
         
-        return jsonify({
+        return {
             'message': 'Ressource créée avec succès',
             'data': data
-        }), 201
+        }
     except Exception as e:
-        return jsonify({
-            'error': str(e)
-        }), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_bp.route('/example/<int:id>', methods=['GET'])
-def get_example_by_id(id):
+@api_router.get('/example/{id}')
+async def get_example_by_id(id: int):
     """Exemple d'endpoint GET avec paramètre"""
     try:
         # Exemple de requête avec filtre
         # response = supabase.table('your_table').select("*").eq('id', id).execute()
         
-        return jsonify({
+        return {
             'message': f'Ressource avec ID {id}',
             'data': {}
-        }), 200
+        }
     except Exception as e:
-        return jsonify({
-            'error': str(e)
-        }), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_bp.route('/example/<int:id>', methods=['PUT'])
-def update_example(id):
+@api_router.put('/example/{id}')
+async def update_example(id: int, data: Dict[str, Any] = Body(...)):
     """Exemple d'endpoint PUT"""
     try:
-        data = request.get_json()
-        
         # Exemple de mise à jour dans Supabase
         # response = supabase.table('your_table').update(data).eq('id', id).execute()
         
-        return jsonify({
+        return {
             'message': f'Ressource {id} mise à jour',
             'data': data
-        }), 200
+        }
     except Exception as e:
-        return jsonify({
-            'error': str(e)
-        }), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@api_bp.route('/example/<int:id>', methods=['DELETE'])
-def delete_example(id):
+@api_router.delete('/example/{id}')
+async def delete_example(id: int):
     """Exemple d'endpoint DELETE"""
     try:
         # Exemple de suppression dans Supabase
         # response = supabase.table('your_table').delete().eq('id', id).execute()
         
-        return jsonify({
+        return {
             'message': f'Ressource {id} supprimée'
-        }), 200
+        }
     except Exception as e:
-        return jsonify({
-            'error': str(e)
-        }), 500
+        raise HTTPException(status_code=500, detail=str(e))
 

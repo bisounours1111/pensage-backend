@@ -1,13 +1,13 @@
-from flask import Blueprint
-
 def register_routes(app):
-    """Enregistrer tous les blueprints de routes"""
+    """Enregistrer tous les routers de routes"""
     
-    # Importer les blueprints
-    from .health import health_bp
-    from .api import api_bp
+    # Importer les routers
+    from .health import health_router
+    from .api import api_router
+    from .ia import ia_router
     
-    # Enregistrer les blueprints
-    app.register_blueprint(health_bp)
-    app.register_blueprint(api_bp, url_prefix='/api')
+    # Enregistrer les routers
+    app.include_router(health_router)
+    app.include_router(api_router, prefix='/api', tags=['API'])
+    app.include_router(ia_router, prefix='/ia', tags=['IA'])
 

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    """Configuration de base pour l'application Flask"""
+    """Configuration de base pour l'application"""
     
     # Supabase
     SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -19,4 +19,3 @@ class Config:
         
         if missing:
             raise ValueError(f"Variables d'environnement manquantes: {', '.join(missing)}")
-

@@ -1,6 +1,8 @@
-# PENSAGA Backend - Flask + Supabase
+# PENSAGA Backend - FastAPI + Supabase
 
-Backend API construite avec Flask et Supabase pour le projet PENSAGA.
+Backend API construite avec FastAPI et Supabase pour le projet PENSAGA.
+
+> ⚠️ **Migration Flask → FastAPI** : Ce projet a été migré de Flask vers FastAPI. Consultez `MIGRATION_FASTAPI.md` pour plus de détails.
 
 ## 🚀 Installation
 
@@ -54,10 +56,15 @@ Puis modifier `.env` avec vos valeurs Supabase :
 ```
 SUPABASE_URL=https://votre-projet.supabase.co
 SUPABASE_KEY=votre_cle_anon
-SECRET_KEY=votre_cle_secrete_flask
 ```
 
 ## 🏃‍♂️ Démarrage
+
+### Démarrage rapide
+
+```bash
+./start.sh
+```
 
 ### Mode développement
 
@@ -65,13 +72,27 @@ SECRET_KEY=votre_cle_secrete_flask
 python app.py
 ```
 
-L'API sera accessible sur `http://localhost:5000`
-
-### Mode production (avec Gunicorn)
+Ou avec uvicorn directement :
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:create_app()
+uvicorn app:app --host 0.0.0.0 --port 5000 --reload
 ```
+
+L'API sera accessible sur `http://localhost:5000`
+
+### Mode production (avec Uvicorn)
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port 5000 --workers 4
+```
+
+## 📚 Documentation interactive
+
+FastAPI génère automatiquement une documentation interactive de l'API :
+
+- **Swagger UI** : http://localhost:5000/docs
+- **ReDoc** : http://localhost:5000/redoc
+- **OpenAPI JSON** : http://localhost:5000/openapi.json
 
 ## 📁 Structure du projet
 
@@ -151,37 +172,75 @@ response = supabase.table('ma_table').delete().eq('id', 1).execute()
 ## 📝 Ajouter de nouvelles routes
 
 1. Créer un nouveau fichier dans le dossier `routes/`
-2. Créer un Blueprint Flask
-3. Enregistrer le Blueprint dans `routes/__init__.py`
+2. Créer un APIRouter FastAPI
+3. Enregistrer le Router dans `routes/__init__.py`
 
 Exemple :
 
 ```python
 # routes/mon_endpoint.py
-from flask import Blueprint, jsonify
+from fastapi import APIRouter
 
-mon_bp = Blueprint('mon_endpoint', __name__)
+mon_router = APIRouter()
 
-@mon_bp.route('/mon-route', methods=['GET'])
-def ma_fonction():
-    return jsonify({'message': 'Ça fonctionne!'})
+@mon_router.get('/mon-route')
+async def ma_fonction():
+    return {'message': 'Ça fonctionne!'}
 ```
 
 ```python
 # routes/__init__.py
 def register_routes(app):
-    from .health import health_bp
-    from .api import api_bp
-    from .mon_endpoint import mon_bp  # Nouvelle import
+    from .health import health_router
+    from .api import api_router
+    from .mon_endpoint import mon_router  # Nouvelle import
 
-    app.register_blueprint(health_bp)
-    app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(mon_bp, url_prefix='/api')  # Nouveau blueprint
+    app.include_router(health_router)
+    app.include_router(api_router, prefix='/api', tags=['API'])
+    app.include_router(mon_router, prefix='/api', tags=['Mon Endpoint'])  # Nouveau router
+```
+
+## 🎯 Créer des modèles Pydantic
+
+FastAPI utilise Pydantic pour la validation automatique des données :
+
+```python
+# models/example.py
+from pydantic import BaseModel
+from typing import Optional
+
+class ExampleCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class ExampleResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+
+    class Config:
+        from_attributes = True
+```
+
+Utilisation dans les routes :
+
+```python
+from models.example import ExampleCreate, ExampleResponse
+
+@api_router.post('/example', response_model=ExampleResponse)
+async def create_example(data: ExampleCreate):
+    # FastAPI valide automatiquement les données
+    return {'id': 1, 'name': data.name, 'description': data.description}
 ```
 
 ## 🧪 Tests
 
 Pour tester l'API, vous pouvez utiliser :
+
+- **Documentation interactive FastAPI** (recommandé)
+
+  - Visitez http://localhost:5000/docs
+  - Testez directement les endpoints depuis le navigateur
 
 - **curl**
 
@@ -197,6 +256,13 @@ http GET http://localhost:5000/health
 
 - **Postman** ou **Insomnia** pour une interface graphique
 
+- **Tests automatisés avec pytest**
+
+```bash
+pip install pytest httpx
+pytest
+```
+
 ## 🔒 Sécurité
 
 - Ne jamais committer le fichier `.env`
@@ -205,11 +271,21 @@ http GET http://localhost:5000/health
 - Utiliser HTTPS en production
 - Limiter les requêtes (rate limiting) si nécessaire
 
+## ⚡ Avantages de FastAPI
+
+- **Performance** : Un des frameworks Python les plus rapides
+- **Documentation automatique** : Swagger UI et ReDoc générés automatiquement
+- **Validation automatique** : Grâce à Pydantic
+- **Support async natif** : Améliore les performances I/O
+- **Type hints** : Meilleure autocomplétion et détection d'erreurs
+- **Standards modernes** : OpenAPI, JSON Schema
+
 ## 📚 Ressources
 
-- [Documentation Flask](https://flask.palletsprojects.com/)
+- [Documentation FastAPI](https://fastapi.tiangolo.com/)
 - [Documentation Supabase Python](https://supabase.com/docs/reference/python/introduction)
 - [Documentation Pydantic](https://docs.pydantic.dev/)
+- [Guide de migration Flask → FastAPI](MIGRATION_FASTAPI.md)
 
 ## 🤝 Contribution
 
