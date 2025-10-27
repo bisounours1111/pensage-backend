@@ -7,19 +7,9 @@ load_dotenv()
 class Config:
     """Configuration de base pour l'application Flask"""
     
-    # Flask
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
-    DEBUG = os.getenv('FLASK_DEBUG', 'True') == 'True'
-    
-    # Server
-    HOST = os.getenv('HOST', '0.0.0.0')
-    PORT = int(os.getenv('PORT', 5000))
-    
     # Supabase
     SUPABASE_URL = os.getenv('SUPABASE_URL')
     SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-    SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
     
     @staticmethod
     def validate():

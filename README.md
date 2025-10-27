@@ -54,7 +54,6 @@ Puis modifier `.env` avec vos valeurs Supabase :
 ```
 SUPABASE_URL=https://votre-projet.supabase.co
 SUPABASE_KEY=votre_cle_anon
-SUPABASE_SERVICE_KEY=votre_cle_service_role
 SECRET_KEY=votre_cle_secrete_flask
 ```
 

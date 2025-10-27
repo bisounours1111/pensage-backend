@@ -6,20 +6,16 @@ from routes import register_routes
 def create_app():
     """Factory function pour créer l'application Flask"""
     
-    # Initialiser Flask
     app = Flask(__name__)
     
-    # Charger la configuration
     app.config.from_object(Config)
     
-    # Valider la configuration
     try:
         Config.validate()
     except ValueError as e:
         print(f"Erreur de configuration: {e}")
         print("Assurez-vous d'avoir créé un fichier .env avec les variables nécessaires")
     
-    # Configurer CORS
     CORS(app, resources={
         r"/*": {
             "origins": "*",
@@ -28,10 +24,8 @@ def create_app():
         }
     })
     
-    # Enregistrer les routes
     register_routes(app)
     
-    # Gestionnaire d'erreurs global
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -51,8 +45,7 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(
-        host=Config.HOST,
-        port=Config.PORT,
-        debug=Config.DEBUG
+        port=5000,
+        debug=True
     )
 

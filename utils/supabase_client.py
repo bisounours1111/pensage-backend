@@ -19,17 +19,6 @@ class SupabaseClient:
             )
         
         return cls._instance
-    
-    @classmethod
-    def get_admin_client(cls) -> Client:
-        """Récupérer un client Supabase avec les privilèges administrateur"""
-        if not Config.SUPABASE_URL or not Config.SUPABASE_SERVICE_KEY:
-            raise ValueError("Les configurations Supabase Admin ne sont pas définies")
-        
-        return create_client(
-            Config.SUPABASE_URL,
-            Config.SUPABASE_SERVICE_KEY
-        )
 
 # Instance globale facile à importer
 supabase = SupabaseClient.get_client()
