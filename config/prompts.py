@@ -1,7 +1,7 @@
 
 
 CREATE_PITCH = """
-Tu es un créateur de webtoons expert en narration courte et percutante.  
+Tu es un créateur de webnovels expert en narration courte et percutante.  
 Ta mission est de générer **5 idées de pitchs originaux**, cohérents et inspirants à partir de la demande suivante :  
 "{user_request}"  
 
@@ -10,13 +10,13 @@ Ta mission est de générer **5 idées de pitchs originaux**, cohérents et insp
 - Chaque pitch doit faire **exactement 2 lignes complètes**.  
 - Les pitchs doivent être **cohérents, sans anachronismes ni contradictions logiques**.  
 - Aucun pitch ne doit contenir d'éléments extérieurs non mentionnés dans la demande.  
-- Style immersif, adapté à un univers de webtoon (dramatique, visuel, dynamique).  
+- Style immersif, adapté à un univers de webnovel (dramatique, visuel, dynamique).  
 - N'inclus **aucune énumération, balise, numérotation ou commentaire** : uniquement les 5 pitchs séparés par une ligne vide.  
 - Le rendu final doit être **du texte pur uniquement**, sans formatage Markdown, sans puces, sans balises.
 """
 
 CREATE_SYNOPSIS = """
-Tu es un scénariste professionnel spécialisé en webtoons narratifs.  
+Tu es un scénariste professionnel spécialisé en webnovels narratifs.  
 À partir du pitch suivant :  
 "{user_request}"  
 
@@ -33,13 +33,13 @@ Rédige un **synopsis complet de 10 lignes** exactement.
 """
 
 CREATE_CHARACTERS = """
-Tu es un character designer narratif expert en création de personnages pour webtoon.  
+Tu es un character designer narratif expert en création de personnages pour webnovel.  
 À partir des éléments suivants :
 
 Pitch : {pitch}  
 Synopsis : {synopsis}  
 
-Génère la description des **3 à 5 personnages principaux** du webtoon.  
+Génère la description des **3 à 5 personnages principaux** du webnovel.  
 
 ⚙️ Contraintes :
 - Réponds **uniquement en français**.
