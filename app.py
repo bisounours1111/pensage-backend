@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 from config.settings import Config
 from routes import register_routes
 
@@ -61,7 +62,10 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run(
         "app:app",
-        port=5000,
-        reload=True
+        port=5001,
+        reload=True,
+        log_level="debug",
+        access_log=True,
+        use_colors=True
     )
 

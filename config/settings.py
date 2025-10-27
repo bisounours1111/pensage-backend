@@ -11,6 +11,11 @@ class Config:
     SUPABASE_URL = os.getenv('SUPABASE_URL')
     SUPABASE_KEY = os.getenv('SUPABASE_KEY')
     
+    # Ollama / IA
+    OLLAMA_URL = os.getenv('OLLAMA_URL', 'http://localhost:11434')
+    OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY')  # Optionnel pour Ollama Cloud
+    OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gpt-oss:120b')
+    
     @staticmethod
     def validate():
         """Valider que toutes les configurations essentielles sont présentes"""
