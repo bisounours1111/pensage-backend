@@ -43,16 +43,24 @@ Génère la description des **3 à 5 personnages principaux** du webnovel.
 
 ⚙️ Contraintes :
 - Réponds **uniquement en français**.
-- Pour chaque personnage, indiquer :  
-  - Nom complet  
-  - Âge  
-  - Apparence physique (détaillée mais concise)  
-  - Personnalité  
-  - Rôle dans l'histoire  
-- Chaque personnage doit être décrit en **100 mots maximum**.  
-- Les descriptions doivent être cohérentes entre elles et avec le synopsis.  
-- Aucun personnage secondaire ou externe ne doit être ajouté.  
-- Le rendu doit être **uniquement du texte brut**, sans titre, sans puce, sans guillemets décoratifs.
+- Tu dois retourner **uniquement du JSON valide** (sans texte supplémentaire avant ou après).
+- Le format JSON doit être un tableau d'objets avec exactement cette structure :
+[
+  {{
+    "nom": "Nom complet du personnage",
+    "âge": "Âge ou tranche d'âge",
+    "apparence": "Description physique détaillée mais concise",
+    "personnalité": "Description de la personnalité",
+    "rôle": "Rôle et importance dans l'histoire"
+  }}
+]
+
+- Chaque personnage doit avoir ces 5 champs obligatoires : nom, âge, apparence, personnalité, rôle
+- Chaque champ doit être une chaîne de caractères en français
+- Chaque description de personnage doit être en **100 mots maximum par champ**
+- Les descriptions doivent être cohérentes entre elles et avec le synopsis
+- Génère entre 3 et 5 personnages selon l'histoire
+- **Réponds SEULEMENT avec le JSON, sans aucun texte avant ou après**
 """
 
 CREATE_EPISODE = """

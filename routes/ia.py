@@ -112,26 +112,139 @@ async def generate_synopsis(request: SynopsisRequest):
 async def generate_characters(request: CharactersRequest):
     """Génère 3-5 personnages principaux à partir d'un pitch et synopsis"""
     try:
+        import json
+        import re
+        
         prompt = CREATE_CHARACTERS.format(
             pitch=request.pitch,
             synopsis=request.synopsis
         )
         result = await request_ia(prompt)
         
+        # Extraire la réponse de l'IA
+        raw_response = result.get("response", "")
+        
+        print(f"[DEBUG] Réponse brute reçue: {raw_response[:500]}")
+        
+        # Extraire le JSON de la réponse (même s'il y a du texte avant/après)
+        json_text = raw_response.strip()
+        
+        # Méthode 1: Chercher un bloc de code markdown
+        json_match = re.search(r'```(?:json)?\s*(\[.*?\])', json_text, re.DOTALL)
+        if json_match:
+            json_text = json_match.group(1)
+            print(f"[DEBUG] JSON extrait via markdown: {json_text[:200]}")
+        
+        # Méthode 2: Chercher un tableau JSON direct
+        else:
+            # Chercher le premier [ et le dernier ]
+            start_idx = json_text.find('[')
+            end_idx = json_text.rfind(']')
+            
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_text = json_text[start_idx:end_idx+1]
+                print(f"[DEBUG] JSON extrait via indices: {json_text[:200]}")
+            
+            # Nettoyer les markdown restants
+            json_text = json_text.strip()
+            if json_text.startswith("```json"):
+                json_text = json_text[7:]
+            if json_text.startswith("```"):
+                json_text = json_text[3:]
+            if json_text.endswith("```"):
+                json_text = json_text[:-3]
+            json_text = json_text.strip()
+        
+        # Parser le JSON avec gestion d'erreurs détaillée
+        try:
+            characters = json.loads(json_text)
+            print(f"[DEBUG] Parsing JSON réussi, {len(characters)} personnages")
+            
+            # Valider que c'est une liste
+            if not isinstance(characters, list):
+                raise ValueError(f"La réponse n'est pas un tableau, type reçu: {type(characters)}")
+            
+            if len(characters) < 1:
+                raise ValueError("Aucun personnage trouvé dans la réponse")
+            
+            # Normaliser les champs des personnages (gérer variantes avec/sans accents)
+            field_mapping = {
+                "age": "âge",
+                "role": "rôle",
+                "perso": "personnalité",
+                "personnalite": "personnalité"
+            }
+            
+            # Valider et normaliser chaque personnage
+            for i, character in enumerate(characters):
+                if not isinstance(character, dict):
+                    raise ValueError(f"Le personnage {i+1} n'est pas un objet")
+                
+                # Normaliser les noms de champs
+                normalized_character = {}
+                for key, value in character.items():
+                    # Appliquer le mapping si nécessaire
+                    if key in field_mapping:
+                        normalized_character[field_mapping[key]] = value
+                    else:
+                        normalized_character[key] = value
+                
+                # Vérifier les champs requis
+                required_fields = ["nom", "âge", "apparence", "personnalité", "rôle"]
+                missing_fields = []
+                for field in required_fields:
+                    if field not in normalized_character:
+                        # Essayer sans accent si nécessaire
+                        base_field = field.replace("âge", "age").replace("rôle", "role")
+                        if base_field in character:
+                            normalized_character[field] = character[base_field]
+                        else:
+                            missing_fields.append(field)
+                            normalized_character[field] = ""
+                
+                if missing_fields:
+                    print(f"[WARNING] Personnage {i+1} - Champs manquants: {missing_fields}, utilisation de valeurs vides")
+                
+                # Remplacer le personnage non normalisé par celui normalisé
+                characters[i] = normalized_character
+            
+            print(f"[DEBUG] Validation réussie pour {len(characters)} personnages")
+            
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] Erreur JSON: {str(e)}")
+            print(f"[ERROR] Texte essayé: {json_text[:500]}")
+            
+            # Fallback : générer un message d'erreur avec un personnage par défaut
+            print(f"[INFO] Tentative de fallback avec un personnage par défaut")
+            characters = [{
+                "nom": "Personnage Non Généré",
+                "âge": "Non spécifié",
+                "apparence": "L'IA n'a pas pu générer cette information",
+                "personnalité": "À définir",
+                "rôle": "À définir"
+            }]
+            print(f"[WARNING] Utilisation du fallback avec un personnage par défaut")
+        
         return {
             "success": True,
             "model": Config.OLLAMA_MODEL,
-            "characters": result.get("response", ""),
+            "characters": characters,
             "metadata": {
                 "total_duration": result.get("total_duration"),
                 "eval_count": result.get("eval_count")
             }
         }
+    except ValueError as e:
+        print(f"[ERROR] Erreur de format: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur de format dans la réponse de l'IA: {str(e)}")
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="Timeout lors de la génération.")
     except httpx.ConnectError:
         raise HTTPException(status_code=503, detail=f"Impossible de se connecter au serveur IA ({Config.OLLAMA_URL}).")
     except Exception as e:
+        print(f"[ERROR] Exception non gérée: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
