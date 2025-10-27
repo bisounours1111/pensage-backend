@@ -5,9 +5,11 @@ def register_routes(app):
     from .health import health_router
     from .api import api_router
     from .ia import ia_router
+    from .stripe import stripe_router
     
     # Enregistrer les routers
     app.include_router(health_router)
     app.include_router(api_router, prefix='/api', tags=['API'])
     app.include_router(ia_router, prefix='/ia', tags=['IA'])
+    app.include_router(stripe_router, prefix='/stripe', tags=['Stripe'])
 
