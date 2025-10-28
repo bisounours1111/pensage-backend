@@ -153,8 +153,15 @@ async def verify_session(session_id: str):
                 # Activer l'abonnement Premium
                 try:
                     supabase = get_supabase_client()
+                    stripe_subscription_id = session.get('subscription')
+                    user_data = supabase.table('user_extend').select('preferences').eq('id', user_id).execute()
+                    current_prefs = {}
+                    if user_data.data and len(user_data.data) > 0 and user_data.data[0].get('preferences'):
+                        current_prefs = user_data.data[0]['preferences'] or {}
+                    updated_prefs = { **current_prefs, 'stripe_subscription_id': stripe_subscription_id }
                     response = supabase.table('user_extend').update({
-                        'has_subscription': True
+                        'has_subscription': True,
+                        'preferences': updated_prefs
                     }).eq('id', user_id).execute()
                     print(f"✅ Abonnement activé pour user {user_id}")
                     print(f"Response: {response}")
@@ -183,9 +190,63 @@ async def verify_session(session_id: str):
             'session_id': session.id,
             'status': session.payment_status,
             'paid': session.payment_status == 'paid',
-            'metadata': session.metadata
+            'metadata': session.metadata,
+            'subscription_id': session.get('subscription')
         }
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@stripe_router.post('/cancel-subscription')
+async def cancel_subscription(request: dict):
+    """Annuler l'abonnement Stripe de l'utilisateur et mettre à jour la BDD"""
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="Stripe n'est pas configuré sur le serveur"
+        )
+
+    try:
+        user_id = request.get('user_id')
+        provided_subscription_id = request.get('stripe_subscription_id')
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id requis")
+
+        supabase = get_supabase_client()
+        # Récupérer l'id d'abonnement stripe depuis la requête (prioritaire) ou les préférences
+        stripe_subscription_id = provided_subscription_id
+        preferences = {}
+        if not stripe_subscription_id:
+            user_resp = supabase.table('user_extend').select('preferences').eq('id', user_id).execute()
+            if not user_resp.data or len(user_resp.data) == 0:
+                raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+            preferences = user_resp.data[0].get('preferences') or {}
+            stripe_subscription_id = preferences.get('stripe_subscription_id')
+
+        if not stripe_subscription_id:
+            raise HTTPException(status_code=400, detail="Aucun abonnement Stripe associé à l'utilisateur")
+
+        # Annuler l'abonnement immédiatement côté Stripe
+        try:
+            stripe.Subscription.delete(stripe_subscription_id)
+        except Exception as e:
+            # Si suppression immédiate échoue, tenter l'annulation en fin de période
+            try:
+                stripe.Subscription.modify(stripe_subscription_id, cancel_at_period_end=True)
+            except Exception as e2:
+                raise HTTPException(status_code=500, detail=f"Stripe error: {e2}")
+
+        # Mettre à jour la BDD: has_subscription = False et supprimer l'id stripe des préférences
+        preferences.pop('stripe_subscription_id', None)
+        supabase.table('user_extend').update({
+            'has_subscription': False,
+            'preferences': preferences
+        }).eq('id', user_id).execute()
+
+        return { 'success': True }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
